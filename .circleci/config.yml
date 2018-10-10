@@ -1,0 +1,9 @@
+jobs:
+  build:
+    macos:
+      xcode: "10.0.0"
+
+    steps:
+      - run: sw_vers
+      - run: ls /Applications
+      - run: sudo echo make me a sandwich
