@@ -5,14 +5,28 @@
 <script src="resources/test-helpers.sub.js"></script>
 <script>
 
-promise_test(t => {
-  const script = 'resources/service-worker-header.py';
+promise_test(async t => {
+  const script = 'resources/service-worker-header.py?header';
   const scope = 'resources/service-worker-header';
-  return service_worker_unregister_and_register(t, script, scope)
-    .then(registration => {
-      assert_true(registration instanceof ServiceWorkerRegistration);
-      return registration.unregister();
-    });
-}, 'A request to fetch service worker script should have Service-Worker header');
+  const expected_url = normalizeURL(script);
+  const registration = await service_worker_unregister_and_register(t, script, scope);
+  assert_true(registration instanceof ServiceWorkerRegistration);
+
+  await wait_for_state(t, registration.installing, 'activated');
+  await registration.update();
+  await registration.unregister();
+}, 'A request to fetch service worker main script should have Service-Worker header');
+
+promise_test(async t => {
+  const script = 'resources/service-worker-imported-header.js';
+  const scope = 'resources/service-worker-imported-header';
+  const expected_url = normalizeURL(script);
+  const registration = await service_worker_unregister_and_register(t, script, scope);
+  assert_true(registration instanceof ServiceWorkerRegistration);
+
+  await wait_for_state(t, registration.installing, 'activated');
+  await registration.update();
+  await registration.unregister();
+}, 'A request to fetch service worker importScripts() resources should not have Service-Worker header');
 
 </script>
