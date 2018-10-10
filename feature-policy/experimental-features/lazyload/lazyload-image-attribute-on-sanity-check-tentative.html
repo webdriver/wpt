@@ -1,0 +1,38 @@
+<!doctype html>
+<meta charset=utf-8>
+<link rel="stylesheet" href="/feature-policy/experimental-features/resources/lazyload-image.css">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+\<body>
+  <p>Image inserted further below.</p>
+  <div id="image-container">
+    <img lazyload="ON" src="/feature-policy/experimental-features/resources/lazyload.png"/>
+  </div>
+  <script>
+    var img = document.querySelector("img");
+    var on_load = null;
+    img.addEventListener("load", () => {
+      img.loaded = true;
+      if (on_load) on_load(true);
+    });
+
+    // Sanity-check: lazyload="on" works as expected.
+    promise_test( async(t) => {
+      const delay = 400;
+      window.scrollTo(0, 0);
+
+      var did_load = await new Promise((resolve) => {
+        if (img.loaded)
+          resolve(true);
+        on_load = resolve;
+        t.step_timeout(resolve.bind(null, false), delay);
+      });
+      assert_false(did_load, "Image should not have loaded.");
+
+      img.scrollIntoView();
+      await new Promise((resolve) => {
+        on_load = resolve;
+      });
+    });
+ </script>
+</body>

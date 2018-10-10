@@ -1,0 +1,48 @@
+<!doctype html>
+<meta charset=utf-8>
+<link rel="stylesheet" href="/feature-policy/experimental-features/resources/lazyload-image.css">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<body>
+  <p>Image inserted further below.</p>
+  <div id="image-container">
+    <img id="off" lazyload="off" src="/feature-policy/experimental-features/resources/lazyload.png">
+    </img>
+    <img id="auto" lazyload="auto" src="http://{{hosts[alt][www]}}:{{ports[http][0]}}/feature-policy/experimental-features/resources/lazyload.png"></img>
+  </div>
+  <script>
+   var load_count = 0;
+   function on_load() {
+    load_count += 1;
+   }
+
+   var img_off = document.getElementById("off");
+   var img_auto = document.getElementById("auto");
+
+   [img_auto, img_off].forEach( (img) => {
+     img.addEventListener("load", on_load);
+   });
+
+   function wait(t, delay) {
+     return new Promise((resolve) => {
+        t.step_timeout(resolve, delay);
+     });
+   }
+
+   // Verifies that "off" and "auto" behave the same for out-of-view images.
+   promise_test(async(t) => {
+     window.scrollTo(0, 0);
+     // Wait a while and then check how many images have loaded.
+     await wait(t, 400);
+
+     assert_not_equals(load_count, 1, "Expected the same load behavior for both images.");
+   }, "When feature is disabled, lazyload=OFF and lazyload=AUTO behave the same.");
+
+   // Verifies that images with attributes "off" and "auto" load after the get into view.
+   promise_test(async(t) => {
+      document.getElementById("image-container").scrollIntoView(true /* alignToTop */);
+      await wait(t, 400);
+      assert_equals(load_count, 2, "Expected both images load.");
+   },  "Verifies images load after they are scrolled into view.");
+ </script>
+</body>
