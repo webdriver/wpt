@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="/feature-policy/experimental-features/resources/common.js"></script>
+<script src="/feature-policy/experimental-features/resources/layout-animations.js"></script>
+<title> 'layout-animations' Policy </title>
+<link rel="stylesheet" href="/feature-policy/experimental-features/resources/layout-animations.css">
+<div id="main-container">
+</div>
+<script>
+  const sample_interval_ms = 25;
+  // Chosen so that for the step-like behavior the transition point is never
+  // one of the samples.
+  const duration_ms = 525;
+
+  // Animations not bundled with the 'layout-animations' policy should run
+  // normally, that is, the behavior of their timing function is "linear".
+  promise_test( async() => {
+    let result = await run_animation_test(
+          sample_scenarios_not_blocked_by_policy,
+          sample_interval_ms,
+          duration_ms);
+    let t = result.time_stamps;
+    let n_samples = result.time_stamps.length;
+    result.scenarios.forEach( (s) => {
+      let expected = linear_timing_function(
+          t, s.samples[0], s.samples[n_samples - 1]);
+      // Mismatch is when the values are more than 1% of the range apart.
+      let index_of_first_difference = find_index_of_first_difference(
+          s.samples, expected, almost_equal_ignoring_rounding_errors);
+      let mismatch = index_of_first_difference !== -1;
+      assert_equals(-1, index_of_first_difference,
+          `Invalid time interpolation for animated property "${s.property}".` +
+          `At time ${t[index_of_first_difference]} the expected sampled ` +
+          `value is ${expected[index_of_first_difference]}, whereas the ` +
+          "measured sample value is " +
+          `${s.samples[index_of_first_difference]}.`);
+    });
+  }, "Verify that animations which are not affected by the policy run as " +
+     "expected.");
+
+  // Animations that are bundled with the 'layout-animations' policy should not
+  // run normally, that is, the behavior of their timing function is "steps".
+  promise_test( async() => {
+    let result = await run_animation_test(
+          sample_scenarios_blocked_by_policy,
+          sample_interval_ms,
+          duration_ms);
+    let t = result.time_stamps;
+    let n_samples = result.time_stamps.length;
+    result.scenarios.forEach( (s) => {
+      let expected = step_timing_function(
+          t, s.samples[0], s.samples[n_samples - 1], duration_ms / 2);
+      // Mismatch is when the values are more than 1% of the range apart.
+      let index_of_first_difference = find_index_of_first_difference(
+          s.samples, expected, almost_equal_ignoring_rounding_errors);
+      let mismatch = index_of_first_difference !== -1;
+      assert_equals(-1, index_of_first_difference,
+          `Invalid time interpolation for animated property "${s.property}".` +
+          `At time ${t[index_of_first_difference]} the expected sampled ` +
+          `value is ${expected[index_of_first_difference]}, whereas the ` +
+          "measured sample value is " +
+          `${s.samples[index_of_first_difference]}.`);
+    });
+  }, "Verify that animations which are affected by the policy run as " +
+     "expected.");
+</script>

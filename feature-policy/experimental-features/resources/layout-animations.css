@@ -1,0 +1,19 @@
+div.container {
+  width: 400px;
+  height: 400px;
+  border: solid 1px black;
+}
+
+div.animated {
+  border: solid 1px brown;
+  position: relative;
+  color: white;
+  width: 100px;
+  height: 100px;
+  left: 150px;
+  top: 150px;
+  background: black;
+  /* Adding an ineffectual transform to make sure the computed style has some
+     numbers for it. */
+  transform: translateY(0px);
+}
